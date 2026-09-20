@@ -10,6 +10,12 @@ archive SHA-256 digest and installs it into a digest-named read-only artifact
 directory. It never executes a floating branch, mutable `latest` name, or
 in-place replacement.
 
+The builder requires the exact release grammar, binds archive timestamps to
+the source commit epoch, verifies the linked binary version, emits deterministic
+USTAR plus timestamp-free gzip, and publishes with no-replace semantics plus
+file and directory synchronization. Final release builds set
+`GOTTH_EXTENSION_REQUIRE_CLEAN=1`; an existing artifact is never overwritten.
+
 Update retains the complete preceding artifact pin and configuration contract.
 Rollback first revokes routing and stops the current process, selects the
 preceding immutable artifact, repeats handshake and health, and only then
