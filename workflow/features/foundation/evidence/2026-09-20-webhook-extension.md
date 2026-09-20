@@ -68,10 +68,11 @@ distribution parity is unavailable.
 
 ## Remaining release boundary
 
-Forgejo `main` is published at the exact candidate commit. Neither the
-development host nor the active agent host has GitHub CLI or SSH
-authentication, and unauthenticated access confirms no usable public mirror.
-Public GitHub creation, one-way mirror configuration, immutable tag/artifact
-publication, release parity, deployed rollback, and network ambiguity
-acceptance remain release gates and are not represented as complete. No tag or
-release was created.
+Forgejo `main` contains the exact candidate and later evidence-only commits;
+the eventual immutable release tag must resolve to the tested candidate
+`3627c43213b82afa290372a6e2d9c36978a54758`. Neither the development host nor
+the active agent host has GitHub CLI or SSH authentication, and unauthenticated
+access confirms no usable public mirror. Public GitHub creation, one-way
+mirror configuration, immutable tag/artifact publication, release parity,
+deployed rollback, and network ambiguity acceptance remain release gates and
+are not represented as complete. No tag or release was created.
