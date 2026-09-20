@@ -1,0 +1,28 @@
+{
+  "schema": "gotth.mail.extension.config.v1",
+  "fields": [
+    {
+      "name": "webhook.endpoint",
+      "label": "HTTPS webhook endpoint",
+      "kind": "string",
+      "required": true,
+      "min": 1,
+      "max": 2048
+    },
+    {
+      "name": "webhook.timeout-seconds",
+      "label": "Request timeout in seconds",
+      "kind": "integer",
+      "required": true,
+      "min": 1,
+      "max": 30,
+      "default": 10
+    },
+    {
+      "name": "webhook.hmac-key",
+      "label": "Webhook HMAC key",
+      "kind": "secret",
+      "required": true
+    }
+  ]
+}

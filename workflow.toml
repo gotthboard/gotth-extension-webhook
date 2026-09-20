@@ -1,0 +1,18 @@
+schema_version = 1
+profile = "strict"
+active_feature = "foundation"
+coverage_map = "workflow/COVERAGE.md"
+
+[[root_features]]
+id = "foundation"
+title = "Webhook extension 1.0 release line"
+state = "in_progress"
+prd = "docs/prd.md"
+architecture = "docs/architecture.md"
+implementation_spec = "docs/implementation-spec.md"
+path = "workflow/features/foundation"
+source_path = "."
+branch = "workflow/feature/foundation"
+worktree = "/tank/development/linus/gotth-extension-webhook"
+dependencies = []
+required_verification = ["git diff --check", "go test ./...", "go test -race ./...", "go vet ./...", "go build ./...", "reproducible artifact", "GOTTH Mail lifecycle integration"]
