@@ -25,16 +25,18 @@ mirror now exists, and Forgejo and GitHub expose the same annotated
 `a126253f637ee9cf8b60482640f5f99c128a2d24`, peeled to the tested candidate
 `3627c43213b82afa290372a6e2d9c36978a54758`.
 
-Foundation remains `blocked`. Forgejo and GitHub have no published Release
-objects for this tag. The GitHub tag fallback URL is not publication. Fresh
+Foundation remains `blocked`. Forgejo publishes the non-draft prerelease with
+the exact archive and `SHA256SUMS`. No GitHub Release is publicly visible;
+draft state is unknown without authentication, and the tag fallback URL is not
+publication. Fresh
 exact-tag verification on 2026-10-21 reproduced the recorded archive exactly.
 Later GOTTH Mail evidence binds that archive to real packaged delivery and
 A→B→A administrator rollback on the development test equipment; this is
 test-equipment evidence, not a live production change. The closeout candidate
 adds the missing post-body transport-close regression; the complete fresh gate
 passed on development.
-Two current clean reviews plus Forgejo/GitHub prerelease-object and exact asset
-publication remain open.
+Two independent final reviews are clean. Matching GitHub prerelease publication
+and exact cross-host asset parity remain open.
 
 The bounded closeout check is:
 
@@ -42,7 +44,8 @@ The bounded closeout check is:
 ./scripts/check-release-closeout.sh
 ```
 
-Current-state mode verifies authenticated Forgejo absence and public GitHub
-published-Release absence; GitHub draft state is unknown without authentication.
-Complete mode requires matching non-draft prereleases and exact assets.
+Incomplete mode verifies whichever host objects are present, including exact
+metadata and assets, while requiring at least one host to remain incomplete.
+Complete mode requires matching non-draft prereleases and exact cross-host
+assets. GitHub draft state is unknown without authentication.
 It does not, by itself, prove artifact identity, lifecycle behavior, or review.

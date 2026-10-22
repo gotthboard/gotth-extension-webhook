@@ -21,8 +21,9 @@ The public GitHub mirror now exists, and its annotated
 that report no public mirror or no tag describe the historical state when they
 were written.
 
-Authenticated Forgejo has no Release object for the tag. No GitHub Release is
-publicly visible; draft state is unknown without GitHub authentication. The tag
+Forgejo now publishes the non-draft prerelease with the exact archive and
+`SHA256SUMS`. No GitHub Release is publicly visible; draft state is unknown
+without GitHub authentication. The tag
 fallback URL and automatic source archives are not publication. Fresh exact-tag
 verification on 2026-10-21 reproduced the
 recorded archive byte-for-byte at SHA-256
@@ -33,7 +34,8 @@ a live production change.
 
 The closeout candidate adds the missing post-body transport-ambiguity
 regression; the complete fresh normal/race/vet/build/reproducibility gate
-passed on development. Two clean final reviews, Forgejo/GitHub prerelease publication,
-and exact asset upload remain pending. Run
+passed on development, including redirect and post-body-close regressions, and
+two independent reviews are clean. Forgejo publication is complete; matching
+GitHub prerelease publication and cross-host byte parity remain pending. Run
 `scripts/check-release-closeout.sh` before and after publication; it verifies
 remote tag identity and the expected Forgejo/GitHub hosted-release state without moving refs.

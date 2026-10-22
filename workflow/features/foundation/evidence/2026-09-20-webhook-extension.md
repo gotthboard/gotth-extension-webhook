@@ -109,14 +109,24 @@ The current closeout candidate adds the missing post-body transport-close
 regression. Its exact external evidence bundle passed the complete normal/race/
 vet/build/reproducible-artifact gate on development, plus JSONL parsing, shell
 syntax, TOML parsing, and diff checks. Earlier wrapper-only quoting failures are
-retained outside the repository and are not counted as passing evidence. Two
-current clean reviews plus Forgejo/GitHub prerelease-object creation and exact
-cross-host asset upload remain pending. The earlier sentence claiming two fresh
+retained outside the repository and are not counted as passing evidence. Two independent final reviews are clean. Forgejo now publishes the exact
+prerelease assets. Matching GitHub publication and exact cross-host parity
+remain pending. The earlier sentence claiming two fresh
 clean reviews is not current closeout evidence and is superseded here.
 
 `scripts/check-release-closeout.sh` is the minimal closeout check for exact
-Forgejo/GitHub tag identity and hosted-release state. Incomplete mode verifies
-authenticated Forgejo absence and public GitHub published-Release absence;
-GitHub draft state remains unknown without authentication. Complete mode
+Forgejo/GitHub tag identity and hosted-release state. Incomplete mode validates any present host object and its exact assets while at
+least one host remains incomplete. Forgejo is currently complete; no GitHub
+Release is publicly visible and GitHub draft state is unknown without
+authentication. Complete mode
 requires matching non-draft prereleases and exact assets.
 Artifact identity, lifecycle, and review use the separate evidence above.
+
+## Forgejo publication — 2026-10-22
+
+Authorized closeout published the non-draft Forgejo prerelease at
+`https://git.dannyhunn.com/gotthboard/gotth-extension-webhook/releases/tag/v1.0.0-alpha.1`
+with exactly the recorded archive and `SHA256SUMS`. Authenticated API retrieval,
+manifest verification, and byte comparison against the retained artifacts
+passed. GitHub publication and cross-host byte parity remain blocked on GitHub
+authorization.

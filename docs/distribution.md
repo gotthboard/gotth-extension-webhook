@@ -28,16 +28,16 @@ GOTTH Mail lifecycle integration, and two fresh clean reviews.
 
 ## Release closeout check
 
-The current state is exact tag parity, authenticated Forgejo Release absence,
-and no publicly visible GitHub Release; GitHub draft state is unknown without
-authentication:
+The current state is exact tag parity plus a published Forgejo prerelease with
+exact assets. No GitHub Release is publicly visible; GitHub draft state is
+unknown without authentication:
 
 ```sh
 FORGEJO_TOKEN=... EXPECT_STATE=incomplete sh scripts/check-release-closeout.sh
 ```
 
-After authorized publication, require matching non-draft prereleases and exact
-assets on both hosts:
+After authorized GitHub publication, require matching non-draft prereleases and
+exact assets on both hosts:
 
 ```sh
 FORGEJO_TOKEN=... EXPECT_STATE=complete sh scripts/check-release-closeout.sh
