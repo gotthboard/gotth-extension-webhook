@@ -25,3 +25,25 @@ available for diagnosis.
 No tag or release is admissible without reproducible archive proof, exact
 binary/tag identity, Forgejo/GitHub parity, checksums, full/race/vet/build,
 GOTTH Mail lifecycle integration, and two fresh clean reviews.
+
+## Release closeout check
+
+The current state is exact tag parity, authenticated Forgejo Release absence,
+and no publicly visible GitHub Release; GitHub draft state is unknown without
+authentication:
+
+```sh
+FORGEJO_TOKEN=... EXPECT_STATE=incomplete sh scripts/check-release-closeout.sh
+```
+
+After authorized publication, require matching non-draft prereleases and exact
+assets on both hosts:
+
+```sh
+FORGEJO_TOKEN=... EXPECT_STATE=complete sh scripts/check-release-closeout.sh
+```
+
+Supply credentials through protected operator environments. The check binds
+canonical HTTP origins, validates Release metadata, downloads authenticated
+Forgejo assets only from that origin, verifies exact checksums, and compares
+cross-host bytes. It never moves a tag.

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Recorded the superseding release-closeout state: the public GitHub mirror
+  and exact `v1.0.0-alpha.1` tag parity now exist. Fresh exact-tag verification
+  reproduced the original archive byte-for-byte, and later Mail evidence binds
+  the same archive to real packaged delivery and A→B→A administrator rollback
+  on the development test equipment. Added the missing post-body-close
+  ambiguity regression and a closeout check for exact tag and hosted-release
+  state. The complete fresh gate passed; two clean final reviews and
+  Forgejo/GitHub prerelease-object plus exact cross-host asset publication
+  remain open. The webhook transport now has explicit redirect fail-closed
+  regression coverage.
 - Hardened release artifact construction: exact version grammar, commit-time
   epoch binding, optional clean-tree enforcement, linked binary-version
   verification, fixed archive modes, deterministic USTAR/gzip output,

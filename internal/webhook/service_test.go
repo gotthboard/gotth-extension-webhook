@@ -79,6 +79,45 @@ func TestSendAlertHTTPSAndHMAC(t *testing.T) {
 	}
 }
 
+func TestSendAlertRedirectIsUnavailableAndTargetIsNotReached(t *testing.T) {
+	targetHit := make(chan struct{}, 1)
+	target := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		select {
+		case targetHit <- struct{}{}:
+		default:
+		}
+	}))
+	defer target.Close()
+
+	source := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Location", target.URL)
+		w.WriteHeader(http.StatusTemporaryRedirect)
+	}))
+	defer source.Close()
+
+	runtime := testRuntime(source.URL)
+	service, err := NewService(runtime)
+	if err != nil {
+		t.Fatal(err)
+	}
+	redirectPolicy := service.client.CheckRedirect
+	client := source.Client()
+	client.Timeout = runtime.Config.Timeout()
+	client.CheckRedirect = redirectPolicy
+	service.client = client
+	defer service.Close()
+
+	response, err := service.SendAlert(authorizedContext(t, runtime.ServiceToken), &pluginv1.SendAlertRequest{Alert: testAlert()})
+	if response != nil || status.Code(err) != codes.Unavailable {
+		t.Fatalf("redirect did not fail closed: response=%#v err=%v", response, err)
+	}
+	select {
+	case <-targetHit:
+		t.Fatal("redirect target was reached")
+	default:
+	}
+}
+
 func TestSendAlertFailuresAreBounded(t *testing.T) {
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("X-Secret", "must-not-return")
@@ -107,6 +146,51 @@ func TestSendAlertFailuresAreBounded(t *testing.T) {
 	}
 	if _, err := service.SendPrompt(authorizedContext(t, runtime.ServiceToken), &pluginv1.SendPromptRequest{}); status.Code(err) != codes.Unimplemented {
 		t.Fatalf("prompt authority unexpectedly available: %v", err)
+	}
+}
+
+func TestSendAlertPostBodyCloseIsNotDelivered(t *testing.T) {
+	received := make(chan []byte, 1)
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Error(err)
+		}
+		received <- body
+		hijacker, ok := w.(http.Hijacker)
+		if !ok {
+			t.Error("response writer cannot inject a post-body close")
+			return
+		}
+		conn, _, err := hijacker.Hijack()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		_ = conn.Close()
+	}))
+	defer server.Close()
+
+	runtime := testRuntime(server.URL)
+	service, err := NewService(runtime)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer service.Close()
+	service.client = server.Client()
+	service.client.Timeout = runtime.Config.Timeout()
+
+	response, err := service.SendAlert(authorizedContext(t, runtime.ServiceToken), &pluginv1.SendAlertRequest{Alert: testAlert()})
+	if response != nil || status.Code(err) != codes.Unavailable {
+		t.Fatalf("ambiguous post-body close claimed delivery: response=%#v err=%v", response, err)
+	}
+	select {
+	case body := <-received:
+		if len(body) == 0 || !strings.Contains(string(body), `"id":"alert-1"`) {
+			t.Fatalf("receiver did not consume the complete alert before closing: %q", body)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("receiver did not consume the alert before the transport failure")
 	}
 }
 

@@ -76,3 +76,47 @@ access confirms no usable public mirror. Public GitHub creation, one-way
 mirror configuration, immutable tag/artifact publication, release parity,
 deployed rollback, and network ambiguity acceptance remain release gates and
 are not represented as complete. No tag or release was created.
+
+## Superseding release-closeout evidence — 2026-10-21
+
+The no-public-mirror and no-tag conclusions above were accurate on
+2026-09-20 but are historical, not current. Read-only remote inspection now
+shows:
+
+```text
+Forgejo tag object: a126253f637ee9cf8b60482640f5f99c128a2d24
+GitHub tag object:  a126253f637ee9cf8b60482640f5f99c128a2d24
+Forgejo peeled:     3627c43213b82afa290372a6e2d9c36978a54758
+GitHub peeled:      3627c43213b82afa290372a6e2d9c36978a54758
+```
+
+The public mirror and exact annotated-tag parity therefore exist. Authenticated
+Forgejo inspection and GitHub's authoritative release-by-tag API confirm that
+no Forgejo Release exists and no GitHub Release is publicly visible. GitHub
+draft state is unknown without authentication; the tag fallback URL is not
+publication.
+
+Fresh closeout verification on 2026-10-21 used a clean public-tag clone and
+Go 1.26.6. `make verify` passed, and a separate mandatory-clean build
+reproduced the original release archive exactly at SHA-256
+`5cb6043ca200acfa67d4c6a85e0c1ba070c51dc550cacca7ce538021c8d9e83a`.
+Later GOTTH Mail records at commits `c0de075b`, `1eaac1ad`, and `70defe10`
+bind that exact alpha.1 archive to real packaged HTTPS/HMAC delivery and
+A→B→A administrator rollback on the development test equipment. Those dated
+records are reused, not relabeled as fresh or as live production acceptance.
+
+The current closeout candidate adds the missing post-body transport-close
+regression. Its exact external evidence bundle passed the complete normal/race/
+vet/build/reproducible-artifact gate on development, plus JSONL parsing, shell
+syntax, TOML parsing, and diff checks. Earlier wrapper-only quoting failures are
+retained outside the repository and are not counted as passing evidence. Two
+current clean reviews plus Forgejo/GitHub prerelease-object creation and exact
+cross-host asset upload remain pending. The earlier sentence claiming two fresh
+clean reviews is not current closeout evidence and is superseded here.
+
+`scripts/check-release-closeout.sh` is the minimal closeout check for exact
+Forgejo/GitHub tag identity and hosted-release state. Incomplete mode verifies
+authenticated Forgejo absence and public GitHub published-Release absence;
+GitHub draft state remains unknown without authentication. Complete mode
+requires matching non-draft prereleases and exact assets.
+Artifact identity, lifecycle, and review use the separate evidence above.
