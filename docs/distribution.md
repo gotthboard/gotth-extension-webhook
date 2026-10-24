@@ -27,11 +27,14 @@ binary/tag identity, Forgejo/GitHub parity, checksums, full/race/vet/build,
 GOTTH Mail lifecycle integration, and two fresh clean reviews.
 
 The next candidate version is `v1.0.0-alpha.2`. Its reproducibility gate and
-release notes are alpha.2-specific. No alpha.2 tag, hosted Release, immutable
-archive digest, or deployment exists until the final candidate is committed and
-all revision-matched gates pass. The closeout script below remains deliberately
-bound to the already-published alpha.1 identity; changing its immutable hashes
-would rewrite release history rather than prepare alpha.2.
+release notes are alpha.2-specific. The sealed implementation checkpoint at
+`7ac45df3` reproducibly builds a local archive with SHA-256
+`0b09bd192e517a79d0088e9c639dd774a81d7089c26c655765f6095103e6a8a2`.
+That local evidence is not publication: no alpha.2 tag, hosted Release,
+published immutable archive, deployment, or owner acceptance exists. The
+closeout script below remains deliberately bound to the already-published
+alpha.1 identity; changing its immutable hashes would rewrite release history
+rather than prepare alpha.2.
 
 ## Release closeout check
 

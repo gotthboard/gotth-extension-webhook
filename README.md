@@ -21,13 +21,24 @@ selected at `v1.0.0` without a `replace` directive.
 
 ## Release status
 
-`v1.0.0-alpha.2` is an uncommitted adoption candidate: it has not been tagged,
+The alpha.2 adoption implementation is committed and pushed on
+`workflow/feature/extensions-v1-adoption` at
+`7ac45df3d9712978868f15d14bc8c402e0d1b0ed` (tree
+`c8d62f9ad598409071dce76bdfc89ae2d9a110b3`). It has not been tagged,
 published, deployed, or accepted by GOTTH Mail. Bounded local verification and
 the designated development-host full/race/repeat/shuffle/vet/build/process/
-hostile/reproducibility/govulncheck/gitleaks matrix pass for the sealed source
-snapshot. Revision-matched Mail lifecycle proof is still required; the alpha.1
-evidence below remains historical and is not automatically evidence for
-alpha.2.
+hostile/reproducibility/govulncheck/gitleaks matrix pass for that exact
+checkpoint. Its reproducible local alpha.2 archive has SHA-256
+`0b09bd192e517a79d0088e9c639dd774a81d7089c26c655765f6095103e6a8a2`.
+
+Release admission remains blocked. The unmodified Mail harness at
+`4a83dee139f3735a4b2f925c54c339cc1afd19df` accepts an alpha.2 path as its
+fourth runner argument but admits only the source-pinned archive SHA-256
+`d3b79e577bc68aedcb83b8c3cc378341cf8610db514c751be3ff331df9a8937a`.
+It has no documented digest override, so it cannot exercise the exact adoption
+archive without a Mail-owned pin change. The lifecycle was not run against a
+bypassed harness. Alpha.1 evidence below remains historical and is not
+relabelled as alpha.2 proof.
 
 ### Historical alpha.1 status
 

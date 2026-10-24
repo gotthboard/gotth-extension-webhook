@@ -15,7 +15,14 @@ All of those extension-repository gates passed locally or on the designated
 development host on 2026-10-23 and are sealed in the requested evidence
 bundle.
 
-Admission remains blocked until the final extension revision and artifact have
-revision-matched GOTTH Mail production-supervisor lifecycle evidence. Historical
-alpha.1 evidence is retained but does not prove the alpha.2 binary. No commit,
-tag, hosted Release, deployment, or Mail source change is authorized here.
+The implementation checkpoint is committed and pushed at `7ac45df3` (tree
+`c8d62f9a`), and its reproducible local alpha.2 archive is
+`sha256:0b09bd192e517a79d0088e9c639dd774a81d7089c26c655765f6095103e6a8a2`.
+Admission remains blocked: the unmodified Mail `4a83dee1` harness accepts a
+candidate path but pins the different historical alpha.2 archive
+`sha256:d3b79e577bc68aedcb83b8c3cc378341cf8610db514c751be3ff331df9a8937a`
+and exposes no documented digest override. Historical alpha.1 evidence is
+retained but does not prove the alpha.2 adoption binary. No tag, hosted Release,
+deployment, release/API/provider/runtime credential use, or Mail source change
+occurred. The branch sync used only existing configured Git
+authentication.

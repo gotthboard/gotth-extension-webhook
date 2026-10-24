@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Sealed the published-V1 adoption implementation at commit `7ac45df3` and
+  reproduced its alpha.2 archive at SHA-256 `0b09bd192e517a79d0088e9c639dd774a81d7089c26c655765f6095103e6a8a2`.
+  Release admission remains blocked because the unmodified current Mail
+  lifecycle harness pins a different historical alpha.2 candidate digest and
+  exposes no digest override. No tag, hosted Release, or deployment was made.
+
 - Prepared `v1.0.0-alpha.2`: select published `gotth-extensions v1.0.0` and
   `gotth-sdk v1.0.0` without replacements, import extension control from the
   SDK, and remove the repository-local control schema and generated Go copy.

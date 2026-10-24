@@ -29,15 +29,20 @@ preserving the existing protobuf wire contract and webhook behavior.
 
 ## Admission status
 
-These are candidate notes, not a publication claim. The final alpha.2 commit,
-tree, source archive, executable, manifest, release archive, and checksums do
-not exist until an authorized commit and final clean build. No alpha.2 tag,
-hosted Release, deployment, or owner acceptance exists. Revision-matched GOTTH
-Mail lifecycle evidence and final admission reviews remain required. Alpha.1
-release notes and immutable release history are unchanged.
+These are candidate notes, not a publication claim. The adoption implementation
+checkpoint is commit `7ac45df3d9712978868f15d14bc8c402e0d1b0ed`, tree
+`c8d62f9ad598409071dce76bdfc89ae2d9a110b3`. Its reproducible local
+Linux/amd64 archive SHA-256 is
+`0b09bd192e517a79d0088e9c639dd774a81d7089c26c655765f6095103e6a8a2`.
+No alpha.2 tag, hosted Release, deployment, or owner acceptance exists.
+Alpha.1 release notes and immutable release history are unchanged.
 
-The sealed uncommitted snapshot passed bounded local verification and the
-designated development-host full, race, repeat, shuffled-race, hostile-input,
-vet, build, process, reproducible two-build, vulnerability, and secret-scan
-gates. That evidence does not replace the missing revision-matched GOTTH Mail
-production-supervisor lifecycle gate.
+The exact checkpoint passed bounded local verification and the designated
+development-host full, race, repeat, shuffled-race, hostile-input, vet, build,
+process, reproducible two-build, vulnerability, and secret-scan gates.
+Revision-matched Mail lifecycle admission is blocked rather than passed: Mail
+commit `4a83dee139f3735a4b2f925c54c339cc1afd19df` pins alpha.2 archive
+`d3b79e577bc68aedcb83b8c3cc378341cf8610db514c751be3ff331df9a8937a`.
+The documented fourth harness argument supplies only the candidate path; no
+documented input overrides that compiled pin. The exact adoption archive was
+therefore not run through a modified or bypassed harness.

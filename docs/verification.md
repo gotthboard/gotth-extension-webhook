@@ -35,8 +35,21 @@ candidate Git tree are under
 `.artifacts/gotth-extension-webhook-v1-adoption-20261023` in the parent
 workspace.
 
-GOTTH Mail was not modified. No retained Mail record names this alpha.2 source
-snapshot and artifact, so the exact remaining runtime gate is a fresh
-production-supervisor lifecycle run against the final alpha.2 revision and
-artifact. This blocks admission but does not invalidate the passed extension
-repository gates.
+The verified implementation checkpoint is
+`7ac45df3d9712978868f15d14bc8c402e0d1b0ed`, tree
+`c8d62f9ad598409071dce76bdfc89ae2d9a110b3`. Its two independently built
+archives match at SHA-256
+`0b09bd192e517a79d0088e9c639dd774a81d7089c26c655765f6095103e6a8a2`.
+
+GOTTH Mail was not modified. The unmodified Mail harness at commit
+`4a83dee139f3735a4b2f925c54c339cc1afd19df`, tree
+`d85c22620f6e2d72b5fcfb49f34ffd16de0d583e`, documents an optional fourth
+argument for an alpha.2 archive path. Its loader nevertheless admits only the
+compiled SHA-256
+`d3b79e577bc68aedcb83b8c3cc378341cf8610db514c751be3ff331df9a8937a`;
+there is no documented flag or environment input for an alternate digest.
+Passing the exact adoption archive would fail the loader's digest check before
+staging B. Changing the constant, using an overlay, or bypassing validation
+would not be revision-matched Mail proof, so the lifecycle gate was not run.
+This exact blocker keeps alpha.2 unpublished without invalidating the passed
+extension-repository gates.
