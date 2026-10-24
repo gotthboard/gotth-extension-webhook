@@ -17,7 +17,7 @@ The bundle contains:
 
 SPDX SHA256 values hash the module ZIP named by downloadLocation. Go h1 directory hashes remain explicitly labelled h1 values in package comments and provenance dirHash1 entries. Deterministic provenance omits invocationId, startedOn, and finishedOn rather than inventing execution facts.
 
-The builder creates and synchronizes all four files in a hidden same-filesystem staging directory, then exposes the complete bundle with one directory rename to a previously absent output path. It refuses an existing target and uses a cooperative lock. Pre-rename failure may leave hidden staging/lock state but no output. Failure after rename may leave a complete but unaccepted output and/or lock. Inspect checksums and state before cleanup; command failure never implies acceptance.
+The builder resolves an ordinary relative output path against the caller's working directory before crossing into the immutable source export. It creates and synchronizes all four files in a hidden same-filesystem staging directory, then exposes the complete bundle with one directory rename to a previously absent output path. It refuses an existing target and uses a cooperative lock. Pre-rename failure may leave hidden staging/lock state but no output. Failure after rename may leave a complete but unaccepted output and/or lock. Inspect checksums and state before cleanup; command failure never implies acceptance.
 
 Final release builds set GOTTH_EXTENSION_REQUIRE_CLEAN=1. The source commit epoch is the only accepted SOURCE_DATE_EPOCH.
 

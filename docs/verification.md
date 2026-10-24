@@ -8,13 +8,12 @@ The full release matrix additionally runs 20 normal repeats, 20 shuffled race re
 
 The earlier .artifacts/gotth-extension-webhook-v1-release-20261023 candidate is historical and not admission evidence: two cold reviews found pre-handler authentication, negotiated-authority, checksum-semantics, provenance, hermeticity, immutable-source, publication, and closeout defects.
 
-The repaired uncommitted worktree passed focused local Go tests, process lifecycle, stable closeout regression, script syntax, formatting, and diff checks. A sealed snapshot was committed only inside an isolated development scratch clone so immutable-HEAD release machinery could be exercised without committing this worktree. The complete development matrix passed: source/diff/format/script checks, module and published-control binding, normal/race/repeat/shuffled-race/hostile suites, both fuzz campaigns, vet, build, process lifecycle, reproducible bundle, clean-mode bundle, govulncheck, and gitleaks. Exact logs, candidate identity, bundle, report, and seals are under .artifacts/gotth-extension-webhook-v1-remediation-20261023.
+The repaired worktree passed focused local Go tests, process lifecycle, stable closeout regression, script syntax, formatting, and diff checks. A sealed snapshot was committed inside an isolated development scratch clone so immutable-HEAD release machinery could be exercised before the release commit. The complete development matrix passed: source/diff/format/script checks, module and published-control binding, normal/race/repeat/shuffled-race/hostile suites, both fuzz campaigns, vet, build, process lifecycle, reproducible bundle, clean-mode bundle, govulncheck, and gitleaks. Exact historical logs, candidate identity, bundle, report, and seals are under .artifacts/gotth-extension-webhook-v1-remediation-20261023.
 
-The isolated validation commit and its bundle are provisional evidence for this uncommitted candidate, not the final release identity. A final authorized commit requires a new clean revision-matched bundle before tagging or publication.
+That isolated validation commit and its bundle remain provisional historical evidence. The committed release candidate now has a clean revision-matched external bundle and focused/reproducibility/closeout evidence. The final-review relative-output defect is repaired and covered by an exact four-asset comparison between ordinary relative and absolute output paths.
 
 ## Remaining producer gates
 
-- The assigned worktree remains intentionally uncommitted; final commit, annotated tag, and stable Forgejo Release identities do not exist.
 - Two fresh independent reviews must accept the final repaired candidate and evidence.
 - Actual stable Forgejo closeout cannot run in published mode until separately authorized tag/Release publication. The closeout implementation is regression-tested against a local Forgejo-compatible fixture.
 

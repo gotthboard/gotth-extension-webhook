@@ -17,8 +17,9 @@
 - Added stable compatibility, dependency/license, security, and post-release
   Mail-owned A→B→A upgrade/rollback requirements; bounded parser fuzzing; and
   rejection of actual Unicode line/paragraph separators at JSON/HTTP boundaries.
-  Producer admission remains blocked on a clean committed final identity,
-  regenerated evidence, two fresh clean reviews, and authorized Forgejo
+  The clean committed candidate and regenerated revision-matched evidence now
+  pass, including ordinary relative-output regression coverage. Producer
+  admission remains blocked on two fresh clean reviews and authorized Forgejo
   publication. GitHub publication is Bryce's handoff; Mail integration follows
   all four extension releases.
 

@@ -7,9 +7,10 @@ right_root=$(mktemp -d)
 extract=$(mktemp -d)
 clone_root=$(mktemp -d)
 replace_root=$(mktemp -d)
+relative_root=$(mktemp -d)
 left=$left_root/bundle
 right=$right_root/bundle
-trap 'rm -rf "$left_root" "$right_root" "$extract" "$clone_root" "$replace_root"' EXIT HUP INT TERM
+trap 'rm -rf "$left_root" "$right_root" "$extract" "$clone_root" "$replace_root" "$relative_root"' EXIT HUP INT TERM
 export GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOPRIVATE= GONOPROXY= GONOSUMDB= GOAMD64=v1
 epoch=$(git -C "$root" show -s --format=%ct HEAD)
 version=1.0.0
@@ -38,6 +39,12 @@ if GOTTH_RELEASE_EXPORT_ROOT="$root" "$root/scripts/build-artifact.sh" "$version
 fi
 grep -Fq 'internal release-build environment is reserved' "$right_root/reserved.log"
 for file in "$archive" "$sbom" "$provenance" SHA256SUMS; do cmp "$left/$file" "$right/$file"; done
+mkdir "$relative_root/caller"
+(
+cd "$relative_root/caller"
+SOURCE_DATE_EPOCH="$epoch" "$root/scripts/build-artifact.sh" "$version" ../bundle >/dev/null
+)
+for file in "$archive" "$sbom" "$provenance" SHA256SUMS; do cmp "$left/$file" "$relative_root/bundle/$file"; done
 (cd "$left" && sha256sum -c SHA256SUMS)
 tar -xzf "$left/$archive" -C "$extract"
 test "$(stat -c %a "$extract/$name")" = 755

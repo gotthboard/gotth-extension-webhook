@@ -7,6 +7,10 @@ if [ "$#" -ne 2 ]; then
 fi
 version=$1
 output=$2
+case $output in
+    /*) ;;
+    *) output=$(pwd -P)/$output ;;
+esac
 if ! printf '%s\n' "$version" | grep -Eq '^1\.0\.0$|^1\.0\.0-(alpha|beta)\.[1-9][0-9]*$'; then
     echo "invalid release version" >&2
     exit 2
