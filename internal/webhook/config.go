@@ -224,6 +224,9 @@ func decodeVersionRanges(data []byte) ([]extensioncore.VersionRange, error) {
 }
 
 func decodeUniqueObject(data []byte) (map[string]json.RawMessage, error) {
+	if !utf8.Valid(data) {
+		return nil, errors.New("invalid UTF-8 JSON input")
+	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.UseNumber()
 	token, err := decoder.Token()

@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -44,6 +45,11 @@ func TestDecodeConfigAndBindingRejectHostileInput(t *testing.T) {
 			}
 		})
 	}
+	invalidUTF8Config := append([]byte(`{"schema":"gotth.extension.webhook.config.v1","endpoint":"https://receiver.example.test/`), 0xff)
+	invalidUTF8Config = append(invalidUTF8Config, []byte(`","timeout_seconds":10}`)...)
+	if _, err := decodeConfig(invalidUTF8Config); err == nil {
+		t.Fatal("configuration containing raw invalid UTF-8 accepted")
+	}
 	binding := testBindingJSON(t)
 	decoded, err := decodeBinding([]byte(binding))
 	if err != nil {
@@ -55,6 +61,19 @@ func TestDecodeConfigAndBindingRejectHostileInput(t *testing.T) {
 	duplicateHostRange := strings.Replace(binding, `"max_minor":0`, `"max_minor":0,"max_minor":0`, 1)
 	if _, err := decodeBinding([]byte(duplicateHostRange)); err == nil {
 		t.Fatal("duplicate host-profile field accepted")
+	}
+	bindingBytes := []byte(binding)
+	instanceMarker := []byte(`"instance_id":"`)
+	instanceOffset := bytes.Index(bindingBytes, instanceMarker)
+	if instanceOffset < 0 {
+		t.Fatal("test binding lacks instance_id")
+	}
+	instanceOffset += len(instanceMarker)
+	invalidUTF8Binding := append([]byte(nil), bindingBytes[:instanceOffset]...)
+	invalidUTF8Binding = append(invalidUTF8Binding, 0xff)
+	invalidUTF8Binding = append(invalidUTF8Binding, bindingBytes[instanceOffset:]...)
+	if _, err := decodeBinding(invalidUTF8Binding); err == nil {
+		t.Fatal("binding containing raw invalid UTF-8 accepted")
 	}
 }
 

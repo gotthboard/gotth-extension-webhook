@@ -22,6 +22,12 @@
   admission remains blocked on two fresh clean reviews and authorized Forgejo
   publication. GitHub publication is Bryce's handoff; Mail integration follows
   all four extension releases.
+- Reject malformed UTF-8 bytes before any shared JSON object decoding, with
+  raw-byte configuration and runtime-binding regressions. Release workflow
+  completion now explicitly requires a revision-matched clean candidate and
+  complete sealed matrix, two clean reviews of that identity and bundle, an
+  annotated `v1.0.0` tag, and successful published-mode canonical Forgejo
+  closeout.
 
 - Sealed the published-V1 adoption implementation at commit `7ac45df3` and
   reproduced its alpha.2 archive at SHA-256 `0b09bd192e517a79d0088e9c639dd774a81d7089c26c655765f6095103e6a8a2`.
