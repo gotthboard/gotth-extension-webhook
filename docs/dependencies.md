@@ -1,0 +1,7 @@
+# Dependency and license policy
+
+The production binary must link only the exact module graph admitted by scripts/release-metadata.py. Its policy pins each module path, version, Go h1 directory checksum, reviewed canonical proxy-ZIP SHA-256, and license; cached ZIP bytes must match before metadata or artifacts are emitted. Foundation and SDK stay pinned at v1.0.0 without replacement. Any added, removed, changed, or replaced linked module fails the artifact build until its identity, license, security impact, and necessity are reviewed and the policy is intentionally updated. SPDX SHA256 fields always hash the ZIP named by downloadLocation; Go h1 values are retained under their own label and are never presented as ZIP hashes.
+
+The current accepted license set is MIT, BSD-3-Clause, and Apache-2.0. The release archive includes the project MIT license plus verbatim upstream license and notice files for every linked module. THIRD_PARTY_NOTICES.md maps each module/version to its reviewed SPDX license identifier, and the SPDX 2.3 SBOM records the same graph. The copied upstream text is authoritative when a classification and license text disagree.
+
+govulncheck ./... is required on the final candidate. A finding is not waived by an SBOM: reachable vulnerabilities block release, while an unreachable or non-applicable finding requires a concrete, revision-bound admission record. Dependency refreshes after v1.0.0 are separate patch-release work, not hidden in this promotion.

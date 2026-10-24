@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- Prepared the independent `v1.0.0` stable candidate identity and exact release
+  acceptance contract. The deterministic bundle now includes the archive, SPDX
+  2.3 SBOM, in-toto/SLSA provenance, external checksums, tracked-source
+  checksums, exact linked-module notices, and verbatim dependency licenses.
+- Added pre-handler deadline/token admission for every RPC, normal SendPrompt
+  admission, authoritative grant/host session derivation, negotiated capability
+  responses, and SendAlert capability enforcement with real Unix-gRPC regression
+  coverage.
+- Reworked release output around an immutable HEAD export, sanitized offline Go
+  environment, actual module-ZIP SHA-256 plus explicitly labelled Go h1 hashes,
+  truthful deterministic SLSA fields, and one atomic bundle-directory rename.
+  Added stable Forgejo-only closeout verification while retaining alpha history.
+- Added stable compatibility, dependency/license, security, and post-release
+  Mail-owned A→B→A upgrade/rollback requirements; bounded parser fuzzing; and
+  rejection of actual Unicode line/paragraph separators at JSON/HTTP boundaries.
+  Producer admission remains blocked on a clean committed final identity,
+  regenerated evidence, two fresh clean reviews, and authorized Forgejo
+  publication. GitHub publication is Bryce's handoff; Mail integration follows
+  all four extension releases.
+
 - Sealed the published-V1 adoption implementation at commit `7ac45df3` and
   reproduced its alpha.2 archive at SHA-256 `0b09bd192e517a79d0088e9c639dd774a81d7089c26c655765f6095103e6a8a2`.
   Release admission remains blocked because the unmodified current Mail

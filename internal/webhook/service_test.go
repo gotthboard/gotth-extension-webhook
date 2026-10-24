@@ -21,10 +21,37 @@ import (
 )
 
 func testRuntime(endpoint string) RuntimeConfig {
+	return testRuntimeWithCapabilities(endpoint, Capabilities)
+}
+
+func testRuntimeWithCapabilities(endpoint string, capabilities []string) RuntimeConfig {
+	manifest, err := Manifest("1.0.0")
+	if err != nil {
+		panic(err)
+	}
+	manifestDigest, err := extensioncore.ManifestDigest(manifest)
+	if err != nil {
+		panic(err)
+	}
+	grant := extensioncore.Grant{
+		Schema: extensioncore.GrantSchema, InstanceID: "00000000-0000-4000-8000-000000000019",
+		ExtensionID: ExtensionID, ManifestDigest: manifestDigest,
+		Capabilities: append([]string(nil), capabilities...),
+		Interfaces:   []extensioncore.InterfaceGrant{{Name: Interface, Major: 1, Minor: 0}},
+		Secrets:      []string{SecretSlot},
+	}
+	host := extensioncore.HostProfile{
+		Protocols:  []extensioncore.VersionRange{{Name: extensioncore.ControlName, Major: 1, MinMinor: 0, MaxMinor: 0}},
+		Interfaces: []extensioncore.VersionRange{{Name: Interface, Major: 1, MinMinor: 0, MaxMinor: 0}},
+	}
+	session, err := extensioncore.Negotiate(manifest, grant, host)
+	if err != nil {
+		panic(err)
+	}
 	return RuntimeConfig{
 		Config:       Config{Schema: ConfigSchema, Endpoint: endpoint, TimeoutSeconds: 5},
-		Binding:      Binding{Schema: "gotth.extension.runtime-binding.v1", InstanceID: "00000000-0000-4000-8000-000000000019", ManifestSHA256: strings.Repeat("1", 64), GrantSHA256: strings.Repeat("2", 64), SessionSHA256: strings.Repeat("3", 64)},
-		ServiceToken: strings.Repeat("t", 32), HMACKey: []byte(strings.Repeat("k", 32)), Version: "1.0.0-alpha.2",
+		Binding:      Binding{Schema: "gotth.extension.runtime-binding.v1", InstanceID: grant.InstanceID, ManifestSHA256: session.ManifestDigest, GrantSHA256: session.GrantDigest, SessionSHA256: session.Fingerprint, Grant: grant, Host: host},
+		ServiceToken: strings.Repeat("t", 32), HMACKey: []byte(strings.Repeat("k", 32)), Version: "1.0.0", Session: session,
 	}
 }
 
@@ -144,7 +171,14 @@ func TestSendAlertFailuresAreBounded(t *testing.T) {
 	if _, err := service.SendAlert(authorizedContext(t, runtime.ServiceToken), &pluginv1.SendAlertRequest{Alert: hostile}); status.Code(err) != codes.InvalidArgument {
 		t.Fatalf("hostile alert accepted: %v", err)
 	}
-	if _, err := service.SendPrompt(authorizedContext(t, runtime.ServiceToken), &pluginv1.SendPromptRequest{}); status.Code(err) != codes.Unimplemented {
+	hostile.Summary = "line separator\u2028must fail"
+	if _, err := service.SendAlert(authorizedContext(t, runtime.ServiceToken), &pluginv1.SendAlertRequest{Alert: hostile}); status.Code(err) != codes.InvalidArgument {
+		t.Fatalf("Unicode line separator accepted: %v", err)
+	}
+	if _, err := service.SendPrompt(authorizedContext(t, runtime.ServiceToken), &pluginv1.SendPromptRequest{}); status.Code(err) != codes.InvalidArgument {
+		t.Fatalf("prompt skipped normal request admission: %v", err)
+	}
+	if _, err := service.SendPrompt(authorizedContext(t, runtime.ServiceToken), &pluginv1.SendPromptRequest{CorrelationId: "corr-1"}); status.Code(err) != codes.Unimplemented {
 		t.Fatalf("prompt authority unexpectedly available: %v", err)
 	}
 }
@@ -191,6 +225,64 @@ func TestSendAlertPostBodyCloseIsNotDelivered(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("receiver did not consume the alert before the transport failure")
+	}
+}
+
+func TestNegotiatedSessionCannotBeWidened(t *testing.T) {
+	runtime := testRuntimeWithCapabilities("https://receiver.example.test/hook", []string{"notification.delivery.status"})
+	service, err := NewService(runtime)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer service.Close()
+	ctx := authorizedContext(t, runtime.ServiceToken)
+	request := &extensionsv1.HandshakeRequest{CorrelationId: "corr-1", Challenge: []byte(strings.Repeat("c", 32)), ExpectedExtensionId: ExtensionID, ExpectedManifestSha256: runtime.Binding.ManifestSHA256, ExpectedGrantSha256: runtime.Binding.GrantSHA256, ExpectedSessionSha256: runtime.Binding.SessionSHA256}
+	response, err := service.Handshake(ctx, request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := response.GetCapabilities(); len(got) != 1 || got[0] != "notification.delivery.status" {
+		t.Fatalf("handshake widened capabilities: %v", got)
+	}
+	legacy, err := service.Capabilities(ctx, &pluginv1.CapabilitiesRequest{CorrelationId: "corr-1"})
+	if err != nil || len(legacy.GetCapabilities()) != 1 || legacy.GetCapabilities()[0] != "notification.delivery.status" {
+		t.Fatalf("legacy capability surface widened: %#v %v", legacy, err)
+	}
+	if _, err := service.SendAlert(ctx, &pluginv1.SendAlertRequest{Alert: testAlert()}); status.Code(err) != codes.PermissionDenied {
+		t.Fatalf("ungranted alert send was not denied: %v", err)
+	}
+
+	interfaceNarrow := testRuntimeWithCapabilities("https://receiver.example.test/hook", []string{"notification.alert.send"})
+	interfaceNarrow.Binding.Grant.Interfaces = nil
+	manifest, err := Manifest(interfaceNarrow.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	narrowSession, err := extensioncore.Negotiate(manifest, interfaceNarrow.Binding.Grant, interfaceNarrow.Binding.Host)
+	if err != nil {
+		t.Fatal(err)
+	}
+	interfaceNarrow.Binding.GrantSHA256 = narrowSession.GrantDigest
+	interfaceNarrow.Binding.SessionSHA256 = narrowSession.Fingerprint
+	interfaceNarrow.Session = narrowSession
+	narrowService, err := NewService(interfaceNarrow)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer narrowService.Close()
+	narrowRequest := &extensionsv1.HandshakeRequest{CorrelationId: "corr-1", Challenge: []byte(strings.Repeat("c", 32)), ExpectedExtensionId: ExtensionID, ExpectedManifestSha256: interfaceNarrow.Binding.ManifestSHA256, ExpectedGrantSha256: interfaceNarrow.Binding.GrantSHA256, ExpectedSessionSha256: interfaceNarrow.Binding.SessionSHA256}
+	narrowResponse, err := narrowService.Handshake(ctx, narrowRequest)
+	if err != nil || len(narrowResponse.GetInterfaces()) != 0 {
+		t.Fatalf("handshake widened interfaces: %#v %v", narrowResponse, err)
+	}
+	if _, err := narrowService.SendAlert(ctx, &pluginv1.SendAlertRequest{Alert: testAlert()}); status.Code(err) != codes.PermissionDenied {
+		t.Fatalf("alert sent without negotiated notification interface: %v", err)
+	}
+
+	tampered := runtime
+	tampered.Binding.SessionSHA256 = strings.Repeat("f", 64)
+	if _, err := NewService(tampered); err == nil {
+		t.Fatal("tampered negotiated session accepted")
 	}
 }
 

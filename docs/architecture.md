@@ -27,10 +27,13 @@ second control schema. This changes source ownership, not protobuf package
 names, field numbers, service names, or full RPC paths.
 
 The process receives paths, not secret values, in its environment. The Mail
-supervisor creates an owner-only instance directory, writes the admitted JSON
-configuration and secret files with mode `0600`, starts the digest-pinned
-artifact with a bounded environment, waits for the Unix socket, performs the
-foundation handshake and health probe, and only then admits routing.
+supervisor creates an owner-only instance directory and writes the admitted JSON
+configuration, canonical grant, authoritative host profile, binding digests, and
+secret files with mode `0600`. The extension reruns foundation negotiation and
+retains the derived session before it opens the socket. The supervisor then
+starts the digest-pinned artifact with a bounded environment, waits for the Unix
+socket, performs the foundation handshake and health probe, and only then admits
+routing.
 
 Disable revokes routing before process termination. Test uses a separate
 ephemeral runtime directory and always stops the process. Update and rollback

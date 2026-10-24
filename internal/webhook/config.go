@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	extensioncore "github.com/gotthboard/gotth-extensions/pkg/extensions"
 )
 
 const (
@@ -42,6 +44,8 @@ type Binding struct {
 	ManifestSHA256 string `json:"manifest_sha256"`
 	GrantSHA256    string `json:"grant_sha256"`
 	SessionSHA256  string `json:"session_sha256"`
+	Grant          extensioncore.Grant
+	Host           extensioncore.HostProfile
 }
 
 type RuntimeConfig struct {
@@ -51,6 +55,7 @@ type RuntimeConfig struct {
 	HMACKey      []byte
 	SocketPath   string
 	Version      string
+	Session      extensioncore.Session
 }
 
 func LoadRuntimeFromEnv() (RuntimeConfig, error) {
@@ -93,10 +98,21 @@ func LoadRuntimeFromEnv() (RuntimeConfig, error) {
 		clear(hmacKey)
 		return RuntimeConfig{}, err
 	}
-	manifestDigest, err := ManifestDigest(BuildVersion)
+	manifest, err := Manifest(BuildVersion)
+	if err != nil {
+		clear(hmacKey)
+		return RuntimeConfig{}, errors.New("invalid extension manifest")
+	}
+	manifestDigest, err := extensioncore.ManifestDigest(manifest)
 	if err != nil || manifestDigest != binding.ManifestSHA256 {
 		clear(hmacKey)
 		return RuntimeConfig{}, errors.New("artifact manifest binding mismatch")
+	}
+	session, err := extensioncore.Negotiate(manifest, binding.Grant, binding.Host)
+	if err != nil || binding.InstanceID != binding.Grant.InstanceID ||
+		binding.GrantSHA256 != session.GrantDigest || binding.SessionSHA256 != session.Fingerprint {
+		clear(hmacKey)
+		return RuntimeConfig{}, errors.New("authoritative extension session binding mismatch")
 	}
 	token := strings.TrimSpace(string(tokenData))
 	if !validToken(token, 32, 256) {
@@ -107,7 +123,7 @@ func LoadRuntimeFromEnv() (RuntimeConfig, error) {
 		clear(hmacKey)
 		return RuntimeConfig{}, err
 	}
-	return RuntimeConfig{Config: config, Binding: binding, ServiceToken: token, HMACKey: hmacKey, SocketPath: socketPath, Version: BuildVersion}, nil
+	return RuntimeConfig{Config: config, Binding: binding, ServiceToken: token, HMACKey: hmacKey, SocketPath: socketPath, Version: BuildVersion, Session: session}, nil
 }
 
 func decodeConfig(data []byte) (Config, error) {
@@ -134,7 +150,7 @@ func decodeConfig(data []byte) (Config, error) {
 
 func decodeBinding(data []byte) (Binding, error) {
 	fields, err := decodeUniqueObject(data)
-	if err != nil || len(fields) != 5 {
+	if err != nil || len(fields) != 7 {
 		return Binding{}, errors.New("invalid extension binding")
 	}
 	var b Binding
@@ -149,7 +165,62 @@ func decodeBinding(data []byte) (Binding, error) {
 			return Binding{}, errors.New("valid digest binding required")
 		}
 	}
+	grantData, ok := fields["grant"]
+	if !ok {
+		return Binding{}, errors.New("authoritative grant required")
+	}
+	b.Grant, err = extensioncore.ParseGrant(grantData)
+	if err != nil {
+		return Binding{}, errors.New("valid authoritative grant required")
+	}
+	hostData, ok := fields["host"]
+	if !ok {
+		return Binding{}, errors.New("authoritative host profile required")
+	}
+	b.Host, err = decodeHostProfile(hostData)
+	if err != nil {
+		return Binding{}, err
+	}
 	return b, nil
+}
+
+func decodeHostProfile(data []byte) (extensioncore.HostProfile, error) {
+	fields, err := decodeUniqueObject(data)
+	if err != nil || len(fields) != 2 {
+		return extensioncore.HostProfile{}, errors.New("invalid authoritative host profile")
+	}
+	protocols, err := decodeVersionRanges(fields["protocols"])
+	if err != nil {
+		return extensioncore.HostProfile{}, err
+	}
+	interfaces, err := decodeVersionRanges(fields["interfaces"])
+	if err != nil {
+		return extensioncore.HostProfile{}, err
+	}
+	return extensioncore.HostProfile{Protocols: protocols, Interfaces: interfaces}, nil
+}
+
+func decodeVersionRanges(data []byte) ([]extensioncore.VersionRange, error) {
+	var values []json.RawMessage
+	if err := json.Unmarshal(data, &values); err != nil || values == nil {
+		return nil, errors.New("invalid host version ranges")
+	}
+	result := make([]extensioncore.VersionRange, 0, len(values))
+	for _, raw := range values {
+		fields, err := decodeUniqueObject(raw)
+		if err != nil || len(fields) != 4 {
+			return nil, errors.New("invalid host version range")
+		}
+		var value extensioncore.VersionRange
+		if decodeField(fields, "name", &value.Name) != nil ||
+			decodeField(fields, "major", &value.Major) != nil ||
+			decodeField(fields, "min_minor", &value.MinMinor) != nil ||
+			decodeField(fields, "max_minor", &value.MaxMinor) != nil {
+			return nil, errors.New("invalid host version range")
+		}
+		result = append(result, value)
+	}
+	return result, nil
 }
 
 func decodeUniqueObject(data []byte) (map[string]json.RawMessage, error) {

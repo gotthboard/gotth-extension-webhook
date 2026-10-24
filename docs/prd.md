@@ -39,8 +39,9 @@ accepting or rejecting the HTTP request.
   headers, URLs, credentials, or receiver error details.
 - `WEBHOOK-007`: Publish immutable Linux/amd64 artifacts with checksums,
   manifest, configuration metadata, and exact source/version identity.
-- `WEBHOOK-008`: Prove test, enable, disable, update, rollback, redaction,
-  crash recovery, and failure isolation through the GOTTH Mail administrator.
+- `WEBHOOK-008`: Preserve the host-owned test, enable, disable, update, rollback,
+  redaction, crash-recovery, and failure-isolation contract. Mail proves that
+  consumer lifecycle after all four extension releases.
 - `WEBHOOK-009`: Consume foundation manifest, grant, and session behavior from
   `gotth-extensions v1.0.0` and generated control messages and services from
   `gotth-sdk v1.0.0`, with no module replacement or repository-local control
@@ -56,8 +57,12 @@ accepting or rejecting the HTTP request.
 
 ## Acceptance
 
-All changed behavior, edge cases, failure paths, and secret boundaries have
-tests. Full, race, vet, build, artifact reproducibility, process integration,
-and two fresh admission reviews pass before the first immutable release.
-Published-module selection, source identity, descriptor identity, RPC paths,
-and absence of a local control copy are mandatory alpha.2 gates.
+All changed extension-owned behavior, edge cases, failure paths, and secret
+boundaries have tests. Full, race, repeat, shuffled-race, bounded fuzz, vet, build, artifact
+reproducibility, process integration, security scans, and two fresh independent
+admission reviews pass before the first stable release. Published-module
+selection, source/descriptor/RPC identity, absence of a local control copy,
+exact linked dependencies, license material, SPDX SBOM, SLSA provenance, and
+revision-matched extension verification and two fresh independent reviews are mandatory producer v1.0.0 gates. The Mail-owned A→B→A consumer integration follows publication of all four extensions and is not a producer-release prerequisite.
+The exact derived checklist is `docs/v1.0.0-acceptance.md`; future work listed
+there is explicitly outside stable admission.

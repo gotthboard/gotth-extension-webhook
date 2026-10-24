@@ -12,7 +12,7 @@ cleanup() {
     rm -rf "$tmp"
 }
 trap cleanup EXIT HUP INT TERM
-version=1.0.0-alpha.2
+version=1.0.0
 binary=$tmp/gotth-extension-webhook
 CGO_ENABLED=0 go build -trimpath -buildvcs=false \
     -ldflags "-X github.com/gotthboard/gotth-extension-webhook/internal/webhook.BuildVersion=$version" \
@@ -32,7 +32,21 @@ printf '%s\n' '{"schema":"gotth.extension.webhook.config.v1","endpoint":"https:/
 manifest=$tmp/manifest.json
 (cd "$root" && go run ./cmd/gotth-extension-webhook-manifest "$version") >"$manifest"
 manifest_sha=$(sha256sum "$manifest" | cut -d' ' -f1)
-printf '%s\n' "{\"schema\":\"gotth.extension.runtime-binding.v1\",\"instance_id\":\"00000000-0000-4000-8000-000000000019\",\"manifest_sha256\":\"$manifest_sha\",\"grant_sha256\":\"$(printf '2%.0s' $(seq 1 64))\",\"session_sha256\":\"$(printf '3%.0s' $(seq 1 64))\"}" >"$tmp/binding.json"
+python3 - "$manifest_sha" "$tmp/binding.json" <<'PY'
+import hashlib,json,sys
+manifest_sha,output=sys.argv[1:]
+instance="00000000-0000-4000-8000-000000000019"
+capabilities=sorted(["notification.alert.send","notification.alert.sink","notification.delivery.status"])
+interfaces=[{"name":"gotth.mail.interface.notification","major":1,"minor":0}]
+grant={"schema":"gotth.extensions.grant.v1","instance_id":instance,"extension_id":"gotth.mail.notification.webhook","manifest_sha256":manifest_sha,"capabilities":capabilities,"interfaces":interfaces,"secrets":["webhook.hmac-key"]}
+canonical_grant=json.dumps(grant,separators=(",",":"))
+grant_sha=hashlib.sha256(canonical_grant.encode()).hexdigest()
+session={"schema":"gotth.extensions.session.v1","extension_id":"gotth.mail.notification.webhook","extension_version":"1.0.0","instance_id":instance,"control":{"name":"gotth.extensions.control","major":1,"minor":0},"interfaces":interfaces,"capabilities":capabilities,"secrets":["webhook.hmac-key"],"manifest_sha256":manifest_sha,"grant_sha256":grant_sha}
+session_sha=hashlib.sha256(json.dumps(session,separators=(",",":")).encode()).hexdigest()
+host={"protocols":[{"name":"gotth.extensions.control","major":1,"min_minor":0,"max_minor":0}],"interfaces":[{"name":"gotth.mail.interface.notification","major":1,"min_minor":0,"max_minor":0}]}
+binding={"schema":"gotth.extension.runtime-binding.v1","instance_id":instance,"manifest_sha256":manifest_sha,"grant_sha256":grant_sha,"session_sha256":session_sha,"grant":grant,"host":host}
+open(output,"w",encoding="utf-8").write(json.dumps(binding,separators=(",",":"))+"\n")
+PY
 chmod 0600 "$tmp/config.json" "$tmp/binding.json" "$tmp/token" "$tmp/secrets/webhook.hmac-key"
 socket=$tmp/extension.sock
 GOTTH_EXTENSION_CONFIG_FILE=$tmp/config.json \

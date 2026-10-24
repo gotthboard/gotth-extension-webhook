@@ -45,7 +45,7 @@ func run() error {
 	if err := os.Chmod(runtime.SocketPath, 0o600); err != nil {
 		return err
 	}
-	server := grpc.NewServer()
+	server := grpc.NewServer(grpc.UnaryInterceptor(service.UnaryServerInterceptor()))
 	extensionsv1.RegisterExtensionControlServer(server, service)
 	pluginv1.RegisterPluginControlServer(server, pluginControlAdapter{service: service})
 	pluginv1.RegisterNotificationBackendServer(server, service)

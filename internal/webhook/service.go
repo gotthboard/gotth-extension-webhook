@@ -19,7 +19,9 @@ import (
 	"unicode/utf8"
 
 	pluginv1 "github.com/gotthboard/gotth-extension-webhook/proto/gotth/mail/plugin/v1"
+	extensioncore "github.com/gotthboard/gotth-extensions/pkg/extensions"
 	extensionsv1 "github.com/gotthboard/gotth-sdk/gen/go/gotth/extensions/v1"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -39,11 +41,22 @@ type Service struct {
 	version string
 	client  *http.Client
 	now     func() time.Time
+	session extensioncore.Session
 }
 
 func NewService(runtime RuntimeConfig) (*Service, error) {
 	if runtime.ServiceToken == "" || len(runtime.HMACKey) < 32 || !validVersion(runtime.Version) {
 		return nil, errors.New("complete webhook runtime required")
+	}
+	manifest, err := Manifest(runtime.Version)
+	if err != nil {
+		return nil, errors.New("valid extension manifest required")
+	}
+	session, err := extensioncore.Negotiate(manifest, runtime.Binding.Grant, runtime.Binding.Host)
+	if err != nil || runtime.Binding.InstanceID != session.InstanceID ||
+		runtime.Binding.ManifestSHA256 != session.ManifestDigest || runtime.Binding.GrantSHA256 != session.GrantDigest ||
+		runtime.Binding.SessionSHA256 != session.Fingerprint {
+		return nil, errors.New("valid authoritative extension session required")
 	}
 	transport := &http.Transport{TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12}}
 	client := &http.Client{
@@ -53,7 +66,7 @@ func NewService(runtime RuntimeConfig) (*Service, error) {
 			return errors.New("webhook redirects are disabled")
 		},
 	}
-	return &Service{config: runtime.Config, binding: runtime.Binding, token: runtime.ServiceToken, key: append([]byte(nil), runtime.HMACKey...), version: runtime.Version, client: client, now: time.Now}, nil
+	return &Service{config: runtime.Config, binding: runtime.Binding, token: runtime.ServiceToken, key: append([]byte(nil), runtime.HMACKey...), version: runtime.Version, client: client, now: time.Now, session: session}, nil
 }
 
 func (s *Service) Close() {
@@ -63,12 +76,9 @@ func (s *Service) Close() {
 	}
 }
 
-func (s *Service) authorize(ctx context.Context, correlationID string) error {
+func (s *Service) authenticate(ctx context.Context) error {
 	if _, ok := ctx.Deadline(); !ok {
 		return status.Error(codes.InvalidArgument, "deadline required")
-	}
-	if !validScalar(correlationID, 1, 256) {
-		return status.Error(codes.InvalidArgument, "valid correlation ID required")
 	}
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -79,6 +89,43 @@ func (s *Service) authorize(ctx context.Context, correlationID string) error {
 		return status.Error(codes.Unauthenticated, "invalid service identity")
 	}
 	return nil
+}
+
+func (s *Service) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, request any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+		if err := s.authenticate(ctx); err != nil {
+			return nil, err
+		}
+		return handler(ctx, request)
+	}
+}
+
+func (s *Service) authorize(ctx context.Context, correlationID string) error {
+	if err := s.authenticate(ctx); err != nil {
+		return err
+	}
+	if !validScalar(correlationID, 1, 256) {
+		return status.Error(codes.InvalidArgument, "valid correlation ID required")
+	}
+	return nil
+}
+
+func (s *Service) hasCapability(name string) bool {
+	for _, capability := range s.session.Capabilities {
+		if capability == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) hasInterface(name string, major, minor uint32) bool {
+	for _, candidate := range s.session.Interfaces {
+		if candidate.Name == name && candidate.Major == major && candidate.Minor == minor {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Service) Handshake(ctx context.Context, in *extensionsv1.HandshakeRequest) (*extensionsv1.HandshakeResponse, error) {
@@ -98,9 +145,9 @@ func (s *Service) Handshake(ctx context.Context, in *extensionsv1.HandshakeReque
 		ManifestSha256:   s.binding.ManifestSHA256,
 		GrantSha256:      s.binding.GrantSHA256,
 		SessionSha256:    s.binding.SessionSHA256,
-		Control:          &extensionsv1.ProtocolVersion{Name: "gotth.extensions.control", Major: 1, Minor: 0},
-		Interfaces:       []*extensionsv1.InterfaceVersion{{Name: Interface, Major: 1, Minor: 0}},
-		Capabilities:     append([]string(nil), Capabilities...),
+		Control:          &extensionsv1.ProtocolVersion{Name: s.session.Control.Name, Major: s.session.Control.Major, Minor: s.session.Control.Minor},
+		Interfaces:       sessionInterfaces(s.session.Interfaces),
+		Capabilities:     append([]string(nil), s.session.Capabilities...),
 	}, nil
 }
 
@@ -144,7 +191,7 @@ func (s *Service) Capabilities(ctx context.Context, in *pluginv1.CapabilitiesReq
 	if err := s.authorize(ctx, in.GetCorrelationId()); err != nil {
 		return nil, err
 	}
-	return &pluginv1.CapabilitiesResponse{Capabilities: append([]string(nil), Capabilities...)}, nil
+	return &pluginv1.CapabilitiesResponse{Capabilities: append([]string(nil), s.session.Capabilities...)}, nil
 }
 
 type detail struct {
@@ -173,6 +220,9 @@ func (s *Service) SendAlert(ctx context.Context, in *pluginv1.SendAlertRequest) 
 	if err := s.authorize(ctx, a.GetCorrelationId()); err != nil {
 		return nil, err
 	}
+	if !s.hasCapability("notification.alert.send") || !s.hasInterface(Interface, 1, 0) {
+		return nil, status.Error(codes.PermissionDenied, "alert send authority not negotiated")
+	}
 	body, err := canonicalAlert(a)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "bounded alert required")
@@ -200,8 +250,22 @@ func (s *Service) SendAlert(ctx context.Context, in *pluginv1.SendAlertRequest) 
 	return &pluginv1.DeliveryResponse{Status: "delivered", Reason: "receiver_accepted", Evidence: &pluginv1.DeliveryEvidence{Transport: "https-webhook", MessageId: a.GetId(), GeneratedAt: generated, VerificationResult: "hmac_sha256", Workflow: "notification.alert"}}, nil
 }
 
-func (s *Service) SendPrompt(context.Context, *pluginv1.SendPromptRequest) (*pluginv1.PromptResponse, error) {
+func (s *Service) SendPrompt(ctx context.Context, in *pluginv1.SendPromptRequest) (*pluginv1.PromptResponse, error) {
+	if in == nil {
+		return nil, status.Error(codes.InvalidArgument, "valid prompt required")
+	}
+	if err := s.authorize(ctx, in.GetCorrelationId()); err != nil {
+		return nil, err
+	}
 	return nil, status.Error(codes.Unimplemented, "webhook extension does not support prompts")
+}
+
+func sessionInterfaces(values []extensioncore.InterfaceGrant) []*extensionsv1.InterfaceVersion {
+	result := make([]*extensionsv1.InterfaceVersion, 0, len(values))
+	for _, value := range values {
+		result = append(result, &extensionsv1.InterfaceVersion{Name: value.Name, Major: value.Major, Minor: value.Minor})
+	}
+	return result
 }
 
 func canonicalAlert(a *pluginv1.AlertMessage) ([]byte, error) {
@@ -242,5 +306,5 @@ func validScalar(value string, min, max int) bool {
 			return false
 		}
 	}
-	return !strings.Contains(value, "\u2028") && !strings.Contains(value, "\u2029")
+	return !strings.ContainsRune(value, '\u2028') && !strings.ContainsRune(value, '\u2029')
 }

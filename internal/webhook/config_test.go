@@ -1,11 +1,28 @@
 package webhook
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func testBindingJSON(t *testing.T) string {
+	t.Helper()
+	binding := testRuntime("https://receiver.example.test/hook").Binding
+	document := map[string]any{
+		"schema": binding.Schema, "instance_id": binding.InstanceID,
+		"manifest_sha256": binding.ManifestSHA256, "grant_sha256": binding.GrantSHA256, "session_sha256": binding.SessionSHA256,
+		"grant": binding.Grant,
+		"host":  map[string]any{"protocols": binding.Host.Protocols, "interfaces": binding.Host.Interfaces},
+	}
+	encoded, err := json.Marshal(document)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(encoded)
+}
 
 func TestDecodeConfigAndBindingRejectHostileInput(t *testing.T) {
 	valid := `{"schema":"gotth.extension.webhook.config.v1","endpoint":"https://receiver.example.test/hook","timeout_seconds":10}`
@@ -27,12 +44,17 @@ func TestDecodeConfigAndBindingRejectHostileInput(t *testing.T) {
 			}
 		})
 	}
-	binding := `{"schema":"gotth.extension.runtime-binding.v1","instance_id":"00000000-0000-4000-8000-000000000019","manifest_sha256":"` + strings.Repeat("1", 64) + `","grant_sha256":"` + strings.Repeat("2", 64) + `","session_sha256":"` + strings.Repeat("3", 64) + `"}`
-	if _, err := decodeBinding([]byte(binding)); err != nil {
+	binding := testBindingJSON(t)
+	decoded, err := decodeBinding([]byte(binding))
+	if err != nil {
 		t.Fatalf("valid binding rejected: %v", err)
 	}
-	if _, err := decodeBinding([]byte(strings.Replace(binding, strings.Repeat("3", 64), strings.Repeat("A", 64), 1))); err == nil {
+	if _, err := decodeBinding([]byte(strings.Replace(binding, decoded.SessionSHA256, strings.ToUpper(decoded.SessionSHA256), 1))); err == nil {
 		t.Fatal("uppercase digest accepted")
+	}
+	duplicateHostRange := strings.Replace(binding, `"max_minor":0`, `"max_minor":0,"max_minor":0`, 1)
+	if _, err := decodeBinding([]byte(duplicateHostRange)); err == nil {
+		t.Fatal("duplicate host-profile field accepted")
 	}
 }
 
@@ -55,13 +77,9 @@ func TestLoadRuntimeFromEnvPrivateFileBoundary(t *testing.T) {
 	}
 	config := writePrivate("config.json", `{"schema":"gotth.extension.webhook.config.v1","endpoint":"https://receiver.example.test/hook","timeout_seconds":10}`)
 	previousVersion := BuildVersion
-	BuildVersion = "1.0.0-alpha.2"
+	BuildVersion = "1.0.0"
 	t.Cleanup(func() { BuildVersion = previousVersion })
-	manifestDigest, err := ManifestDigest(BuildVersion)
-	if err != nil {
-		t.Fatal(err)
-	}
-	binding := writePrivate("binding.json", `{"schema":"gotth.extension.runtime-binding.v1","instance_id":"00000000-0000-4000-8000-000000000019","manifest_sha256":"`+manifestDigest+`","grant_sha256":"`+strings.Repeat("2", 64)+`","session_sha256":"`+strings.Repeat("3", 64)+`"}`)
+	binding := writePrivate("binding.json", testBindingJSON(t))
 	token := writePrivate("token", strings.Repeat("t", 32))
 	if err := os.WriteFile(filepath.Join(secretDir, SecretSlot), []byte(strings.Repeat("k", 32)), 0o600); err != nil {
 		t.Fatal(err)
@@ -76,7 +94,7 @@ func TestLoadRuntimeFromEnvPrivateFileBoundary(t *testing.T) {
 		t.Fatalf("valid runtime rejected: %v", err)
 	}
 	defer clear(runtime.HMACKey)
-	if runtime.Binding.InstanceID == "" || len(runtime.HMACKey) != 32 || runtime.ServiceToken == "" {
+	if runtime.Binding.InstanceID == "" || runtime.Session.Fingerprint != runtime.Binding.SessionSHA256 || len(runtime.HMACKey) != 32 || runtime.ServiceToken == "" {
 		t.Fatalf("incomplete runtime: %#v", runtime)
 	}
 
