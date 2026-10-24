@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Prepared `v1.0.0-alpha.2`: select published `gotth-extensions v1.0.0` and
+  `gotth-sdk v1.0.0` without replacements, import extension control from the
+  SDK, and remove the repository-local control schema and generated Go copy.
+  Exact module, source, descriptor, RPC-path, and no-local-copy gates preserve
+  the V1 wire contract. The alpha.2 artifact and process gates replace only
+  current candidate machinery; alpha.1 release records remain historical.
+
 - Recorded the superseding release-closeout state: the public GitHub mirror
   and exact `v1.0.0-alpha.1` tag parity now exist. Fresh exact-tag verification
   reproduced the original archive byte-for-byte, and later Mail evidence binds

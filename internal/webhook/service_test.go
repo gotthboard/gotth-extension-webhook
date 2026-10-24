@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	extensionsv1 "github.com/gotthboard/gotth-extension-webhook/proto/gotth/extensions/v1"
 	pluginv1 "github.com/gotthboard/gotth-extension-webhook/proto/gotth/mail/plugin/v1"
 	extensioncore "github.com/gotthboard/gotth-extensions/pkg/extensions"
+	extensionsv1 "github.com/gotthboard/gotth-sdk/gen/go/gotth/extensions/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -24,7 +24,7 @@ func testRuntime(endpoint string) RuntimeConfig {
 	return RuntimeConfig{
 		Config:       Config{Schema: ConfigSchema, Endpoint: endpoint, TimeoutSeconds: 5},
 		Binding:      Binding{Schema: "gotth.extension.runtime-binding.v1", InstanceID: "00000000-0000-4000-8000-000000000019", ManifestSHA256: strings.Repeat("1", 64), GrantSHA256: strings.Repeat("2", 64), SessionSHA256: strings.Repeat("3", 64)},
-		ServiceToken: strings.Repeat("t", 32), HMACKey: []byte(strings.Repeat("k", 32)), Version: "1.0.0-alpha.1",
+		ServiceToken: strings.Repeat("t", 32), HMACKey: []byte(strings.Repeat("k", 32)), Version: "1.0.0-alpha.2",
 	}
 }
 

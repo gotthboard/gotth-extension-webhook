@@ -20,6 +20,12 @@ gotth-extension-webhook
 configured webhook receiver
 ```
 
+The extension-control service implementation imports the generated V1 package
+from `gotth-sdk v1.0.0`. Foundation manifest construction and validation stay
+in `gotth-extensions v1.0.0`; the extension repository does not own or vendor a
+second control schema. This changes source ownership, not protobuf package
+names, field numbers, service names, or full RPC paths.
+
 The process receives paths, not secret values, in its environment. The Mail
 supervisor creates an owner-only instance directory, writes the admitted JSON
 configuration and secret files with mode `0600`, starts the digest-pinned

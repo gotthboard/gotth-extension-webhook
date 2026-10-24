@@ -10,8 +10,8 @@ import (
 	"syscall"
 
 	"github.com/gotthboard/gotth-extension-webhook/internal/webhook"
-	extensionsv1 "github.com/gotthboard/gotth-extension-webhook/proto/gotth/extensions/v1"
 	pluginv1 "github.com/gotthboard/gotth-extension-webhook/proto/gotth/mail/plugin/v1"
+	extensionsv1 "github.com/gotthboard/gotth-sdk/gen/go/gotth/extensions/v1"
 	"google.golang.org/grpc"
 )
 

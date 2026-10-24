@@ -18,8 +18,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	extensionsv1 "github.com/gotthboard/gotth-extension-webhook/proto/gotth/extensions/v1"
 	pluginv1 "github.com/gotthboard/gotth-extension-webhook/proto/gotth/mail/plugin/v1"
+	extensionsv1 "github.com/gotthboard/gotth-sdk/gen/go/gotth/extensions/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"

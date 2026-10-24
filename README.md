@@ -12,7 +12,24 @@ The first release is being developed on the `1.0.0-alpha.N` line. See
 [`docs/prd.md`](docs/prd.md), [`docs/architecture.md`](docs/architecture.md),
 and [`docs/implementation-spec.md`](docs/implementation-spec.md).
 
+The next extension version is `v1.0.0-alpha.2`. Its candidate replaces the
+repository-local extension-control protobuf with the published
+`github.com/gotthboard/gotth-sdk/gen/go/gotth/extensions/v1` package. The
+foundation manifest, grant, and session contracts remain imported from
+`github.com/gotthboard/gotth-extensions/pkg/extensions`. Both modules are
+selected at `v1.0.0` without a `replace` directive.
+
 ## Release status
+
+`v1.0.0-alpha.2` is an uncommitted adoption candidate: it has not been tagged,
+published, deployed, or accepted by GOTTH Mail. Bounded local verification and
+the designated development-host full/race/repeat/shuffle/vet/build/process/
+hostile/reproducibility/govulncheck/gitleaks matrix pass for the sealed source
+snapshot. Revision-matched Mail lifecycle proof is still required; the alpha.1
+evidence below remains historical and is not automatically evidence for
+alpha.2.
+
+### Historical alpha.1 status
 
 The public GitHub mirror now exists, and its annotated
 `v1.0.0-alpha.1` tag exactly matches Forgejo: tag object

@@ -55,7 +55,7 @@ func TestLoadRuntimeFromEnvPrivateFileBoundary(t *testing.T) {
 	}
 	config := writePrivate("config.json", `{"schema":"gotth.extension.webhook.config.v1","endpoint":"https://receiver.example.test/hook","timeout_seconds":10}`)
 	previousVersion := BuildVersion
-	BuildVersion = "1.0.0-alpha.1"
+	BuildVersion = "1.0.0-alpha.2"
 	t.Cleanup(func() { BuildVersion = previousVersion })
 	manifestDigest, err := ManifestDigest(BuildVersion)
 	if err != nil {

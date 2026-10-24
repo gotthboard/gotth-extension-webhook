@@ -41,6 +41,10 @@ accepting or rejecting the HTTP request.
   manifest, configuration metadata, and exact source/version identity.
 - `WEBHOOK-008`: Prove test, enable, disable, update, rollback, redaction,
   crash recovery, and failure isolation through the GOTTH Mail administrator.
+- `WEBHOOK-009`: Consume foundation manifest, grant, and session behavior from
+  `gotth-extensions v1.0.0` and generated control messages and services from
+  `gotth-sdk v1.0.0`, with no module replacement or repository-local control
+  copy.
 
 ## Non-goals
 
@@ -55,3 +59,5 @@ accepting or rejecting the HTTP request.
 All changed behavior, edge cases, failure paths, and secret boundaries have
 tests. Full, race, vet, build, artifact reproducibility, process integration,
 and two fresh admission reviews pass before the first immutable release.
+Published-module selection, source identity, descriptor identity, RPC paths,
+and absence of a local control copy are mandatory alpha.2 gates.

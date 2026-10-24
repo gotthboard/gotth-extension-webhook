@@ -1,6 +1,6 @@
 schema_version = 1
 profile = "strict"
-active_feature = "foundation"
+active_feature = "extensions-v1-adoption"
 coverage_map = "workflow/COVERAGE.md"
 
 [[root_features]]
@@ -16,3 +16,17 @@ branch = "workflow/feature/foundation"
 worktree = "/tank/development/linus/gotth-extension-webhook"
 dependencies = []
 required_verification = ["git diff --check", "go test ./...", "go test -race ./...", "go vet ./...", "go build ./...", "reproducible artifact", "GOTTH Mail lifecycle integration", "post-body transport-close ambiguity regression", "scripts/check-release-closeout.sh", "docs/release-notes-v1.0.0-alpha.1.md"]
+
+[[root_features]]
+id = "extensions-v1-adoption"
+title = "Published Extensions V1 adoption for alpha.2"
+state = "blocked"
+prd = "docs/prd.md"
+architecture = "docs/architecture.md"
+implementation_spec = "docs/implementation-spec.md"
+path = "workflow/features/extensions-v1-adoption"
+source_path = "."
+branch = "workflow/feature/extensions-v1-adoption"
+worktree = "/home/linus/.openclaw/workspace/.artifacts/worktrees/gotth-extension-webhook-v1-adoption"
+dependencies = []
+required_verification = ["git diff --check", "gofmt clean", "exact gotth-extensions v1.0.0 and gotth-sdk v1.0.0 without replace", "foundation/SDK control source SHA-256 binding", "SDK linked descriptor SHA-256 and RPC paths", "no repository-local control copy", "go test ./...", "go test -race ./...", "repeat and shuffle tests", "go vet ./...", "go build ./...", "alpha.2 reproducible two-build artifact", "alpha.2 process lifecycle", "govulncheck", "gitleaks", "hostile-input tests", "revision-matched GOTTH Mail lifecycle integration or an explicit blocker", "docs/release-notes-v1.0.0-alpha.2.md"]

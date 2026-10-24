@@ -26,7 +26,16 @@ No tag or release is admissible without reproducible archive proof, exact
 binary/tag identity, Forgejo/GitHub parity, checksums, full/race/vet/build,
 GOTTH Mail lifecycle integration, and two fresh clean reviews.
 
+The next candidate version is `v1.0.0-alpha.2`. Its reproducibility gate and
+release notes are alpha.2-specific. No alpha.2 tag, hosted Release, immutable
+archive digest, or deployment exists until the final candidate is committed and
+all revision-matched gates pass. The closeout script below remains deliberately
+bound to the already-published alpha.1 identity; changing its immutable hashes
+would rewrite release history rather than prepare alpha.2.
+
 ## Release closeout check
+
+The following closeout status and command are the retained alpha.1 record.
 
 The current state is exact tag parity plus a published Forgejo prerelease with
 exact assets. No GitHub Release is publicly visible; GitHub draft state is

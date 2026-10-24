@@ -46,6 +46,15 @@ time by the earlier RPC deadline or configured timeout, and does not retry.
 
 ## RPC admission
 
+Control request/response and gRPC service types come only from
+`github.com/gotthboard/gotth-sdk/gen/go/gotth/extensions/v1` at module version
+`v1.0.0`. The module's copied source is bound byte-for-byte to the
+`gotth-extensions v1.0.0` control source at SHA-256
+`846dbdd487e9688a338c7885478e1296456f994813330ecccdc3f4b225f10cfe`;
+the deterministic descriptor-set SHA-256 is
+`62a549b29a030f0decb46b2b1c2f382bbbc75430ba0b3d7c729bd21528b505cf`.
+
+
 Every RPC requires a deadline, a bounded correlation ID, and constant-time
 comparison of `x-gotth-mail-service-token` metadata against the protected token
 file. Control handshake additionally binds the expected extension ID,
@@ -61,3 +70,6 @@ The release archive contains only the static executable, `manifest.json`,
 `configuration-metadata.json`, `LICENSE`, and `SHA256SUMS`. The archive name is
 `gotth-extension-webhook-<version>-linux-amd64.tar.gz`. Artifact identity is
 the SHA-256 digest of the final archive and is recorded as `sha256:<hex>`.
+The current artifact gate builds `1.0.0-alpha.2` twice and requires identical
+bytes, embedded checksums, linked version identity, fixed modes, source-epoch
+binding, malformed-version rejection, and no replacement of an existing file.
